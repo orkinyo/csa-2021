@@ -13,8 +13,6 @@ INVALID_COIN_NUMBER = "COIN NUMBER CAN'T BE NEGATIVE"
 INITIAL_COINS = 10
 big_num = 6277101735386680763835789423207666416102355444464034512895
 
-#flag = CSA{I_L1K3_THE_TW1ST_4T_THE_END}
-
 class Slotmachine(object):
     def __init__(self):
         seed = random.SystemRandom().getrandbits(64)  # Using SystemRandom is slow, use only for seed.

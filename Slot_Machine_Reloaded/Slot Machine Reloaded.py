@@ -49,11 +49,6 @@ class Slotmachine(object):
         return None
 
     # My cat wrote this function
-
-    # len(PRINTABLE) -1 alaways == 63
-    # len(f'{len(PRINTABLE) - 1:b}') always == 2
-    # "(1 << (flag_len*len(f'{len(PRINTABLE) - 1:b}'))) - 1" === ( 1 << flag_len * 2 ) -1
-    # "len(self.slots)*int(math.log(len(PRINTABLE), 2)) + 2" ==  len(self.slots) * 6 + 2
     def choice(self):
         rand_num = format(self.random._randbelow((1 << (flag_len*len(f'{len(PRINTABLE) - 1:b}'))) - 1),
             '#0%db' % (len(self.slots)*int(math.log(len(PRINTABLE), 2)) + 2))[2:]
