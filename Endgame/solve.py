@@ -67,8 +67,7 @@ def execute_ins():
         if not execute_opcode():
             pass
 
-   
 while ins_index < len(instructions) - 1:
     execute_ins()
 
-print(f"flag = {long_to_bytes(_1A.value).decode()}")
+print(long_to_bytes(_1A.value).decode())
