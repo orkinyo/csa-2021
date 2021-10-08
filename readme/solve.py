@@ -1,35 +1,37 @@
-from Crypto.Cipher import ARC4
-import itertools
-
-key_checker_data = b"\xE0\x33\x70\x95\xA1\xE5\x03"
-
-#flag == CSA{hEY_th@T_l5_thE_9RE4T_p[ZZL3}
+with open("readme", "r") as file:
+    data = file.read()
+split_data = data.split("-------------")
+enc_story = split_data[1].strip()
+story = split_data[2].strip()
 
 def check_key(key, key_checker_data):
     """ returns True is the key is correct.
         Usage:
-        check_key('[I_think_this_is_the_key]', key_checker_data)
+        check_key('{I_think_this_is_the_key}', key_checker_data)
     """
-    return ARC4.new(("CSA" + key).encode()).decrypt(key_checker_data) == b'success'
+    arc4 = ARC4.new(("CSA" + key).encode())
+    return arc4.decrypt(key_checker_data) == b'success'
 
-def recurse(l1, l2):
-    ret = [1] * (len(l1) * len(l2))
-    for i1, c1 in enumerate(l1):
-        for i2, c2 in enumerate(l2):
-            ret[(i1 * len(l2) ) + i2] = c1 + c2
-    return ret
+flags_option = []
 
-options = [['E', '3'], ['Y', 'y'], ['_'], ['T', 't'], ['h', 'H'], ['4', '@', 'A'], ['T', 't'], ['_'],
-           ['1', 'i', 'l'], ['5', 'S'], ['_'], ['T', 't'], ['h', 'H'], ['E', '3'], ['_'], ['9', 'g'], ['r', 'R'],
-           ['E', '3'], ['4', '@', 'A'], ['T', 't'], ['_'], ['9', 'p'], ['[', 'u'], ['z', 'Z'], ['z', 'Z'], ['1', 'L'],
-           ['E', '3']]
+def rec(options, flag="", index=0):
+    if index == 28:
+        flags_option.append(flag)
+        return
+    for o in options[index]:
+        rec(options, flag + o, index + 1)
 
-my = [['h','H']]
-for i in range(1,len(options),1):
-    my[0] = recurse(my[0], options[i])
+mapping = dict()
+mapping["_"] = {'_'}
+flag_map = []
+for i, char in enumerate(story.lower()):
+    mapping[char] = mapping.get(char, set())
+    mapping[char].add(enc_story[i])
+for i in "hey_that_is_the_great_puzzle":
+    flag_map.append(list(mapping[i]))
+rec(flag_map)
 
-for flag in my[0]:
-    if check_key("{" + flag + "}", key_checker_data):
-        print(f"{flag=}")
-
-        
+for flag in flags_option:
+    if check_key(f"{{{flag}}}", b"\xE0\x33\x70\x95\xA1\xE5\x31"):
+        print(f"CSA{{{flag}}}")
+        break
